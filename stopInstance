@@ -1,0 +1,10 @@
+#!/bin/bash
+INSTANCE=${INSTANCE_NAME:-k3smulti}
+echo "Stopping"
+limactl stop $INSTANCE
+echo "Unlock disk"
+for d in $(limactl disk list | grep $INSTANCE | awk '{print $1}'); do
+    echo "limactl disk unlock $d"
+    limactl disk unlock $d
+done
+limactl disk list | grep $INSTANCE

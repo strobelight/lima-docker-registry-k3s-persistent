@@ -1,0 +1,6 @@
+#!/bin/bash
+INSTANCE=${INSTANCE_NAME:-k3smulti}
+INSTANCE_NAME=$INSTANCE ./stopInstance
+echo "Deleting"
+limactl delete $INSTANCE
+echo "Done"
