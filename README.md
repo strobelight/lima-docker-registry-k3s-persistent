@@ -10,7 +10,7 @@ Start lima with docker and k3s, with amd64 and arm architecture, mounting the do
 ## Start
 `./startK3sMultiDocker`
 
-This creates 10G disk for mounting of docker directories (holding your images for persistency across instance deletes), starts lima, docker, k3s, and a docker registry with a UI available on http://localhost:8080.
+This creates 20G disk for mounting of docker directories (holding your images for persistency across instance deletes), starts lima, docker, k3s, and a docker registry with a UI available on http://localhost:8080.
 
 `./restartInstance`
 

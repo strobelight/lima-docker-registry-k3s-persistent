@@ -10,7 +10,7 @@ YAML=${QEMU_YAML:-./docker-k3s-multiarch.yaml}
 DISK_NAME=docker
 DISK_PRESENT=$(limactl disk ls 2>/dev/null| grep $DISK_NAME)
 if [ -z "$DISK_PRESENT" ]; then
-    limactl disk create $DISK_NAME --size 10G
+    limactl disk create $DISK_NAME --size 20G
 fi
 limactl start --name $INSTANCE_NAME --tty=false $YAML
 
