@@ -1,5 +1,5 @@
 # lima-docker-registry-k3s-persistent
-Start lima with docker and k3s, with amd64 and arm architecture, mounting the docker directory of root and user to external disk, start docker registry and ui to it.
+Start lima with docker and k3s, with amd64 and arm architecture, mounting the docker directory of root and user to external disk, start docker registry and ui to it. Based off of some [lima examples](https://github.com/lima-vm/lima/tree/master/examples).
 
 ## Pre-requisites
 * `brew install docker`
