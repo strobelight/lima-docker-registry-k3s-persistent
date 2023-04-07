@@ -1,0 +1,164 @@
+# Example to use Docker instead of containerd & nerdctl, with binfmt for multi-arch, and k3s
+# $ limactl start ./docker-k3s-multiarch.yaml
+# $ limactl shell docker docker run -it -v $HOME:$HOME --rm alpine
+
+# To run `docker` on the host (assumes docker-cli is installed):
+# $ export DOCKER_HOST=$(limactl list docker --format 'unix://{{.Dir}}/sock/docker.sock')
+# $ docker ...
+
+# $ export KUBECONFIG=$(limactl list k3s --format 'unix://{{.Dir}}/copied-from-guest/kubeconfig.yaml')
+# $ kubectl get no
+# NAME       STATUS   ROLES                  AGE   VERSION
+# lima-k3s   Ready    control-plane,master   69s   v1.21.1+k3s1
+
+# merge into current .kube/config
+# limactl shell $(limactl list | grep Running | awk '{print $1}') sudo kubectl config view --flatten > /tmp/config.tmp
+# KUBECONFIG=~/.kube/config:/tmp/config.tmp kubectl config view --merge --flatten > ~/.kube/config.new
+# mv ~/.kube/config ~/.kube/config.bak
+# mv ~/.kube/config.new ~/.kube/config
+# kubectl config get-contexts
+
+# This example requires Lima v0.8.0 or later
+images:
+# Try to use release-yyyyMMdd image if available. Note that release-yyyyMMdd will be removed after several months.
+- location: "https://cloud-images.ubuntu.com/releases/22.04/release-20230210/ubuntu-22.04-server-cloudimg-amd64.img"
+  arch: "x86_64"
+  digest: "sha256:4401cf7e994842f11398a54d0159b689b2fcace166be6147013f128ddb15875e"
+- location: "https://cloud-images.ubuntu.com/releases/22.04/release-20230210/ubuntu-22.04-server-cloudimg-arm64.img"
+  arch: "aarch64"
+  digest: "sha256:d044311b6e2d838f1175a67a5f7fa6bc0936f8001180df539025ec6587c33d28"
+# Fallback to the latest release image.
+# Hint: run `limactl prune` to invalidate the cache
+- location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img"
+  arch: "x86_64"
+- location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-arm64.img"
+  arch: "aarch64"
+
+cpus: 4
+memory: "8GiB"
+
+mounts:
+- location: "~"
+  writable: true
+- location: "/tmp/lima"
+  writable: true
+
+# external disk
+# limactl disk create docker --size 10G
+# will be available as /mnt/lima-docker
+additionalDisks:
+- docker
+
+# containerd is managed by Docker, not by Lima, so the values are set to false here.
+containerd:
+  system: false
+  user: false
+provision:
+- mode: system
+  # mount docker directories to external disk for persistency
+  # courtesy jandubois
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+
+    MNT=/mnt/lima-docker
+    ROOT=/var/lib/docker
+    USER=/home/${LIMA_CIDATA_USER}.linux/.local/share/docker
+
+    mkdir -p $MNT/root $MNT/user
+    mkdir -p $ROOT $USER
+    mount --bind /$MNT/root $ROOT
+    mount --bind /$MNT/user $USER
+
+    chown -R $LIMA_CIDATA_USER:$LIMA_CIDATA_USER /home/${LIMA_CIDATA_USER}.linux/.local
+- mode: system
+  # This script defines the host.docker.internal hostname when hostResolver is disabled.
+  # It is also needed for lima 0.8.2 and earlier, which does not support hostResolver.hosts.
+  # Names defined in /etc/hosts inside the VM are not resolved inside containers when
+  # using the hostResolver; use hostResolver.hosts instead (requires lima 0.8.3 or later).
+  script: |
+    #!/bin/sh
+    sed -i 's/host.lima.internal.*/host.lima.internal host.docker.internal/' /etc/hosts
+- mode: system
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    command -v docker >/dev/null 2>&1 && exit 0
+    if [ ! -e /etc/systemd/system/docker.socket.d/override.conf ]; then
+      mkdir -p /etc/systemd/system/docker.socket.d
+      # Alternatively we could just add the user to the "docker" group, but that requires restarting the user session
+      cat <<-EOF >/etc/systemd/system/docker.socket.d/override.conf
+      [Socket]
+      SocketUser=${LIMA_CIDATA_USER}
+    EOF
+    fi
+    export DEBIAN_FRONTEND=noninteractive
+    curl -fsSL https://get.docker.com | sh
+- mode: system
+  script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    docker run --privileged --rm tonistiigi/binfmt --install all
+- mode: system
+  script: |
+    #!/bin/bash
+    mkdir -p /etc/rancher/k3s/
+    cat <<EOF > /etc/rancher/k3s/registries.yaml
+    mirrors:
+      localhost:
+        endpoint:
+          - "http://localhost:5000"
+    EOF
+- mode: system
+  script: |
+    #!/bin/sh
+    curl -sfL https://get.k3s.io | sh -
+
+probes:
+- script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    if ! timeout 30s bash -c "until command -v docker >/dev/null 2>&1; do sleep 3; done"; then
+      echo >&2 "docker is not installed yet"
+      exit 1
+    fi
+    if ! timeout 30s bash -c "until pgrep dockerd; do sleep 3; done"; then
+      echo >&2 "dockerd is not running"
+      exit 1
+    fi
+  hint: See "/var/log/cloud-init-output.log". in the guest
+- script: |
+    #!/bin/bash
+    set -eux -o pipefail
+    if ! timeout 30s bash -c "until test -f /etc/rancher/k3s/k3s.yaml; do sleep 3; done"; then
+            echo >&2 "k3s is not running yet"
+            exit 1
+    fi
+  hint: |
+    The k3s kubeconfig file has not yet been created.
+    Run "limactl shell k3s sudo journalctl -u k3s" to check the log.
+    If that is still empty, check the bottom of the log at "/var/log/cloud-init-output.log".
+
+hostResolver:
+  # hostResolver.hosts requires lima 0.8.3 or later. Names defined here will also
+  # resolve inside containers, and not just inside the VM itself.
+  hosts:
+    host.docker.internal: host.lima.internal
+portForwards:
+- guestSocket: "/var/run/docker.sock"
+  hostSocket: "{{.Dir}}/sock/docker.sock"
+message: |
+  To run `docker` on the host (assumes docker-cli is installed), run the following commands:
+  ------
+  docker context create lima-{{.Name}} --docker "host=unix://{{.Dir}}/sock/docker.sock"
+  docker context use lima-{{.Name}}
+  docker run hello-world
+  ------
+  To run `kubectl` on the host (assumes kubectl is installed), run the following commands:
+  ------
+  mkdir -p {{.Dir}}/copied-from-guest
+  limactl shell {{.Name}} sudo cat /etc/rancher/k3s/k3s.yaml > {{.Dir}}/copied-from-guest/kubeconfig.yaml
+  export KUBECONFIG="{{.Dir}}/copied-from-guest/kubeconfig.yaml"
+  kubectl ...
+  ------
+

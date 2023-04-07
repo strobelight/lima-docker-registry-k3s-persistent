@@ -3,7 +3,7 @@
 cd "$( dirname "${BASH_SOURCE[0]}" )"
 
 INSTANCE_NAME=${INSTANCE_NAME:-k3smulti}
-YAML=./docker-k3s-multiarch.yaml
+YAML=${QEMU_YAML:-./docker-k3s-multiarch.yaml}
 
 # start lima from desired yaml file
 # check for disks and create them first with limactl disk create blah --size blah
