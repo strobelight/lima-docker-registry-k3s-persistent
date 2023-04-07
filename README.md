@@ -32,3 +32,11 @@ The yaml used by `startK3sMultiDocker` to start qemu, docker, k3s, etc.
 A supporting script called by `startK3sMultiDocker` and `restartInstance` that starts a docker registry and a UI that can access it too.
 ### test/run-hello.sh
 A test script that runs the `hello-world` in k3s. `hello-world` is pulled, tagged with a bogus 1.2.3 revision, and pushed to the local docker registry that should be accessible from k3s. Logs are pulled in a loop to see its output. The pod is terminated after 5 minutes or you can press ctrl-C.
+
+## Registry
+The registry needs some poking to clean up after deletes:
+```
+docker exec registry registry garbage-collect /etc/docker/registry/config.yml
+```
+
+Unfortuneately, _folders_ are not removed (near as I can tell).
