@@ -1,4 +1,5 @@
 #!/bin/bash
+cd "$( dirname "${BASH_SOURCE[0]}" )"
 INSTANCE=${INSTANCE_NAME:-k3smulti}
 INSTANCE_NAME=$INSTANCE ./stopInstance
 echo "Deleting"
