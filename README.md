@@ -40,3 +40,33 @@ docker exec registry registry garbage-collect /etc/docker/registry/config.yml
 ```
 
 Unfortuneately, _folders_ are not removed (near as I can tell).
+
+## Cross-platform builds
+
+This lima contains both a qemu-amd64 and qemu-arm64, and the right one will be started for your platform (arm64 in the case of M1 or M2). This means however that builds will also be on the default platform instead of amd64 that RDEI expects.
+
+Here are several ways to affect the resulting platform architecture of a build:
+
+* Dockerfile:
+```
+FROM --platform=linux/arm64 python:3.7-alpine
+FROM --platform=linux/amd64 python:3.7-alpine
+```
+* Environment Variable:
+```
+export DOCKER_DEFAULT_PLATFORM=linux/arm64
+export DOCKER_DEFAULT_PLATFORM=linux/amd64
+```
+* On build line:
+```
+docker buildx build --platform linux/arm64 ...
+docker buildx build --platform linux/amd64 ...
+```
+* In docker-compose.yaml:
+```
+services:
+  blah:
+    platform: linux/amd64
+    #platform: linux/arm64
+  ...
+```
