@@ -9,6 +9,6 @@ if [ -z "$INSTANCE" ]; then
     echo "$INSTANCE not simply stopped"
     exit
 fi
-limactl stop $INSTANCE_NAME
+limactl stop -f $INSTANCE_NAME
 limactl start $INSTANCE_NAME
 INSTANCE_NAME=$INSTANCE_NAME ./startRegistry

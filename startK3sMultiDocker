@@ -12,7 +12,13 @@ DISK_PRESENT=$(limactl disk ls 2>/dev/null| grep $DISK_NAME)
 if [ -z "$DISK_PRESENT" ]; then
     limactl disk create $DISK_NAME --size 20G
 fi
-limactl start --name $INSTANCE_NAME --tty=false $YAML
+EXISTS="$(limactl list -f '{{ .Name }}' $INSTANCE_NAME)"
+if [ -z "$EXISTS" ]; then
+    limactl start --name $INSTANCE_NAME --tty=false $YAML
+else
+    INSTANCE_NAME=$INSTANCE_NAME ./restartInstance
+fi
+
 
 echo "Performing above steps ..."
 # copy kubeconfig
