@@ -39,5 +39,5 @@ cleanup() {
 }
 
 trap cleanup 0 1 2 3 15 21 22
-echo "ctrl-c to quit, otherwise in 5 minutes it'll quit"
-sleep 5m
+echo "ctrl-c to quit, otherwise in 15 seconds it'll quit"
+sleep 15s
