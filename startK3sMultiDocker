@@ -14,6 +14,8 @@ if [ -z "$DISK_PRESENT" ]; then
 fi
 EXISTS="$(limactl list -f '{{ .Name }}' $INSTANCE_NAME)"
 if [ -z "$EXISTS" ]; then
+    echo "prune cache and start $INSTANCE_NAME using $YAML"
+    limactl prune
     limactl start --name $INSTANCE_NAME --tty=false $YAML
 else
     INSTANCE_NAME=$INSTANCE_NAME ./restartInstance
@@ -21,8 +23,13 @@ fi
 
 
 echo "Performing above steps ..."
+# set up docker
+docker context create lima-$INSTANCE_NAME --docker "host=unix://$HOME/.lima/$INSTANCE_NAME/sock/docker.sock"
+docker context use lima-$INSTANCE_NAME
 # copy kubeconfig
 mkdir -p ~/.lima/$INSTANCE_NAME/copied-from-guest
+HERE="$(pwd)"
+cd
 limactl shell $INSTANCE_NAME sudo cat /etc/rancher/k3s/k3s.yaml > ~/.lima/$INSTANCE_NAME/copied-from-guest/kubeconfig.yaml
 
 # merge kube config with current one
@@ -41,4 +48,6 @@ TS=$(stat --format "%y" $MY_CONFIG | sed 's/\..*//;s/ /_/g;s/://g')
 mv $MY_CONFIG ${MY_CONFIG}_${TS}
 mv $NEW_CONFIG $MY_CONFIG
 rm -f $GUEST_CONFIG $NEW_CONFIG
+cd "$HERE"
 INSTANCE_NAME=$INSTANCE_NAME ./startRegistry
+echo "see \"$HOME/.lima/$INSTANCE_NAME/serial.log\" for startup details"

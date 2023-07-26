@@ -31,10 +31,19 @@ for i in `seq 1 5`; do
 done
 cleanup() {
     trap - 0 1 2 3 15 21 22
-    echo
-    echo
-    echo "If you saw the Hello-World output, GREAT! Your registry is accessible to k3s"
-    echo
+    cat <<-EOF
+	
+	
+	If you see the following above:
+	
+	    Hello from Docker!
+	    This message shows that your installation appears to be working correctly.
+	
+	GREAT! Your registry is accessible to k3s
+	
+	otherwise, something went wrong.
+	
+	EOF
     kubectl delete -f hello.yaml
 }
 
