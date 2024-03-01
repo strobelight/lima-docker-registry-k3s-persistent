@@ -21,17 +21,21 @@
 # This example requires Lima v0.8.0 or later
 images:
 # Try to use release-yyyyMMdd image if available. Note that release-yyyyMMdd will be removed after several months.
-- location: "https://cloud-images.ubuntu.com/releases/22.04/release-20230719/ubuntu-22.04-server-cloudimg-amd64.img"
-  arch: "x86_64"
-  digest: "sha256:d699ae158ec028db69fd850824ee6e14c073b02ad696b4efb8c59d37c8025aaa"
-- location: "https://cloud-images.ubuntu.com/releases/22.04/release-20230719/ubuntu-22.04-server-cloudimg-arm64.img"
-  arch: "aarch64"
-  digest: "sha256:c8d196b1cdd634ba463921944cb7493252e99586520dfed257a4e66448a0b66d"
+#- location: "https://cloud-images.ubuntu.com/releases/22.04/release-20230719/ubuntu-22.04-server-cloudimg-amd64.img"
+#  arch: "x86_64"
+#  digest: "sha256:d699ae158ec028db69fd850824ee6e14c073b02ad696b4efb8c59d37c8025aaa"
+#- location: "https://cloud-images.ubuntu.com/releases/22.04/release-20230719/ubuntu-22.04-server-cloudimg-arm64.img"
+#  arch: "aarch64"
+#  digest: "sha256:c8d196b1cdd634ba463921944cb7493252e99586520dfed257a4e66448a0b66d"
 # Fallback to the latest release image.
 # Hint: run `limactl prune` to invalidate the cache
-- location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img"
+#- location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img"
+#  arch: "x86_64"
+- location: "https://cloud-images.ubuntu.com/releases/23.10/release/ubuntu-23.10-server-cloudimg-amd64.img"
   arch: "x86_64"
-- location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-arm64.img"
+#- location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-arm64.img"
+#  arch: "aarch64"
+- location: "https://cloud-images.ubuntu.com/releases/23.10/release/ubuntu-23.10-server-cloudimg-arm64.img"
   arch: "aarch64"
 
 cpus: 4
@@ -95,7 +99,7 @@ provision:
     curl -fsSL https://get.docker.com | sh
     # NOTE: you may remove the lines below, if you prefer to use rootful docker, not rootless
     systemctl disable --now docker
-    apt-get install -y uidmap dbus-user-session
+    apt-get install -y uidmap dbus-user-session socket
 - mode: system
   script: |
     #!/bin/bash
@@ -122,6 +126,9 @@ provision:
   script: |
     #!/bin/sh
     curl -sfL https://get.k3s.io | sh -
+
+networks:
+- lima: shared
 
 probes:
 - script: |

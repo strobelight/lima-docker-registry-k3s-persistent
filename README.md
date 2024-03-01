@@ -4,8 +4,27 @@ Start lima with docker and k3s, with amd64 and arm architecture, mounting the do
 ## Pre-requisites
 * `brew install docker`
 * `brew install kubernetes-cli`
-* `brew install lima`
+* `brew install lima  # also installs qemu`
+* `brew install socket_vmnet`
 * PATH updated for access to docker, limactl and kubectl
+
+### Checks
+Run `limactl sudoers --check` several times until it's happy.
+
+For example, I had to modify `~/.lima/_config/networks.yaml` and changed the following:
+```
+  socketVMNet: "/usr/local/Cellar/socket_vmnet/1.1.0/bin/socket_vmnet"
+```
+
+The check isn't happy about symbolic links so if `socket_vmnet` gets updated, you'll need to do this again.
+
+Then it complained about sudoers being out of sync, so I ran the command it said to, but need to add `$PWD/` for the install:
+
+```
+limactl sudoers >etc_sudoers.d_lima && sudo install -o root $PWD/etc_sudoers.d_lima "/private/etc/sudoers.d/lima"
+```
+
+Finally the check passed with `is up-to-date`.
 
 ## Start
 `./startK3sMultiDocker [cluster-name]`
