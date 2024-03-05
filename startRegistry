@@ -38,7 +38,7 @@ docker stop registry 2>/dev/null
 docker stop registry-ui 2>/dev/null
 docker rm registry 2>/dev/null
 docker rm registry-ui 2>/dev/null
-docker run -d --restart=always -p "127.0.0.1:5000:5000" \
+docker run -d --restart=always -p "0.0.0.0:5000:5000" \
     -v ${DOCKER_STORAGE}:/var/lib/registry \
     -v ${DOCKER_STORAGE}/registry_config.yml:/etc/docker/registry/config.yml \
     --name registry registry
