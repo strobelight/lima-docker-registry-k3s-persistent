@@ -50,7 +50,7 @@ This stops the instance.
 ### docker-k3s-multiarch.yaml
 The yaml used by `startK3sMultiDocker` to start qemu, docker, k3s, etc.
 ### docker-k3s-multiarch-rootful.yaml
-If you need dockerd to run as root, `export QEMU_YAML="./docker-k3s-multiarch-rootful.yaml" before running `startK3sMultiDocker`.
+If you need dockerd to run as root, `export QEMU_YAML="./docker-k3s-multiarch-rootful.yaml"` before running `startK3sMultiDocker`.
 ### startRegistry
 A supporting script called by `startK3sMultiDocker` and `restartInstance` that starts a docker registry and a UI that can access it too.
 ### test/run-hello.sh
