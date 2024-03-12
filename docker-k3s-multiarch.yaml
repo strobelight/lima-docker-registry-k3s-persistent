@@ -1,3 +1,5 @@
+# https://github.com/lima-vm/lima/blob/master/examples
+#
 # Example to use Docker instead of containerd & nerdctl, with binfmt for multi-arch, and k3s
 # $ limactl start ./docker-k3s-multiarch.yaml
 # $ limactl shell docker docker run -it -v $HOME:$HOME --rm alpine
