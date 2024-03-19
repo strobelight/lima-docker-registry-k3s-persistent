@@ -1,3 +1,5 @@
+# https://github.com/lima-vm/lima/blob/master/examples
+#
 # Example to use Docker instead of containerd & nerdctl, with binfmt for multi-arch, and k3s
 # $ limactl start ./docker-k3s-multiarch.yaml
 # $ limactl shell docker docker run -it -v $HOME:$HOME --rm alpine
@@ -21,20 +23,20 @@
 # This example requires Lima v0.8.0 or later
 images:
 # Try to use release-yyyyMMdd image if available. Note that release-yyyyMMdd will be removed after several months.
-#- location: "https://cloud-images.ubuntu.com/releases/22.04/release-20230719/ubuntu-22.04-server-cloudimg-amd64.img"
+#- location: "https://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-amd64.img"
 #  arch: "x86_64"
-#  digest: "sha256:d699ae158ec028db69fd850824ee6e14c073b02ad696b4efb8c59d37c8025aaa"
-#- location: "https://cloud-images.ubuntu.com/releases/22.04/release-20230719/ubuntu-22.04-server-cloudimg-arm64.img"
+#- location: "https://cloud-images.ubuntu.com/releases/bionic/release/ubuntu-18.04-server-cloudimg-arm64.img"
 #  arch: "aarch64"
-#  digest: "sha256:c8d196b1cdd634ba463921944cb7493252e99586520dfed257a4e66448a0b66d"
-# Fallback to the latest release image.
-# Hint: run `limactl prune` to invalidate the cache
+#- location: "https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-amd64.img"
+#  arch: "x86_64"
+#- location: "https://cloud-images.ubuntu.com/releases/focal/release/ubuntu-20.04-server-cloudimg-arm64.img"
+#  arch: "aarch64"
 #- location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-amd64.img"
 #  arch: "x86_64"
-- location: "https://cloud-images.ubuntu.com/releases/23.10/release/ubuntu-23.10-server-cloudimg-amd64.img"
-  arch: "x86_64"
 #- location: "https://cloud-images.ubuntu.com/releases/22.04/release/ubuntu-22.04-server-cloudimg-arm64.img"
 #  arch: "aarch64"
+- location: "https://cloud-images.ubuntu.com/releases/23.10/release/ubuntu-23.10-server-cloudimg-amd64.img"
+  arch: "x86_64"
 - location: "https://cloud-images.ubuntu.com/releases/23.10/release/ubuntu-23.10-server-cloudimg-arm64.img"
   arch: "aarch64"
 
@@ -91,6 +93,16 @@ provision:
     #!/bin/sh
     sed -i 's/host.lima.internal.*/host.lima.internal host.docker.internal/' /etc/hosts
 - mode: system
+  # disable ipv6
+  script: |
+    #!/bin/bash
+    sysctl -w net.ipv6.conf.all.disable_ipv6=1
+    sysctl -w net.ipv6.conf.default.disable_ipv6=1
+    cat <<-EOF >> /etc/sysctl.conf
+    net.ipv6.conf.all.disable_ipv6=1
+    net.ipv6.conf.default.disable_ipv6=1
+    EOF
+- mode: system
   script: |
     #!/bin/bash
     set -eux -o pipefail
@@ -126,7 +138,8 @@ provision:
     curl -sfL https://get.k3s.io | sh -
 
 networks:
-- lima: shared
+  # shared, bridged, host, user-v2
+  - lima: shared
 
 probes:
 - script: |

@@ -39,7 +39,7 @@ docker stop registry-ui 2>/dev/null
 docker rm registry 2>/dev/null
 docker rm registry-ui 2>/dev/null
 # ensure port forwardings gone
-limactl shell $INSTANCE_NAME pkill -f docker-proxy
+limactl shell $INSTANCE_NAME sudo pkill -f docker-proxy
 docker run -d --restart=always -p "0.0.0.0:5000:5000" \
     -v ${DOCKER_STORAGE}:/var/lib/registry \
     -v ${DOCKER_STORAGE}/registry_config.yml:/etc/docker/registry/config.yml \
