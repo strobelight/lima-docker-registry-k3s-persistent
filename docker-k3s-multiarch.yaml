@@ -93,14 +93,16 @@ provision:
     #!/bin/sh
     sed -i 's/host.lima.internal.*/host.lima.internal host.docker.internal/' /etc/hosts
 - mode: system
-  # disable ipv6
+  # sysctl changes
   script: |
     #!/bin/bash
     sysctl -w net.ipv6.conf.all.disable_ipv6=1
     sysctl -w net.ipv6.conf.default.disable_ipv6=1
+    sysctl -w vm.max_map_count=262144
     cat <<-EOF >> /etc/sysctl.conf
     net.ipv6.conf.all.disable_ipv6=1
     net.ipv6.conf.default.disable_ipv6=1
+    vm.max_map_count=262144
     EOF
 - mode: system
   script: |
